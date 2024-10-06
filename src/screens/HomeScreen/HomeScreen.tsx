@@ -1,63 +1,152 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { Avatar, Text, Button } from 'react-native-paper';
+import { FlatList, View } from 'react-native';
+import { Avatar, Button, Divider, FAB, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper'
 import { styles } from '../../theme/styles';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
-import { useNavigation } from '@react-navigation/native'; // Para redirigir al login
+import firebase, { updateProfile } from '@firebase/auth';
+import { AutosCardComponet } from '../HomeScreen/components/AutosCardComponet';
+import { NewAutoComponent } from './components/NewAutoComponent';
 
-//interface - UserAuth
-interface UserAuth {
+//interface - FormUser
+
+interface FormUser {
   name: string;
 }
 
+//interface - autos
+
+interface Autos {
+  id: string;
+  placa: string;
+  modelo: string;
+  description: string;
+  precio: number;
+  color: string;
+}
+
 export const HomeScreen = () => {
-  const [UserAuth, setUserAuth] = useState<UserAuth>({
-    name: '',
+  //hoook usestate: cambiar el estado del formulario
+  const [FormUser, setFormUser] = useState<FormUser>({
+    name: ""
   });
 
-  const navigation = useNavigation();
+  //hook usestate: capturar y modificar la data del usuario autenticado
+  const [userData, setUserData] = useState<firebase.User | null>(null);
 
-  //hook useEffect: validar el estado de autenticación
+  //hook usestate : permitir que el modal se visualice
+  const [showModalProfile, setShowModalProfile] = useState<boolean>(false);
+
+  //hook usestate permite que el modal de autos se vea
+
+  const [showModalAuto, setShowModalAuto] = useState<boolean>(false);
+
+  //hook usestate: gestionar la lista de autos 
+
+  const [autos, setAutos] = useState<Autos[]>([
+    {
+      id: '1',
+      placa: 'PWC1450',
+      modelo: 'Chevrolet',
+      description: 'inventario',
+      precio: 7000,
+      color: 'plomo'
+    },
+    {
+      id: '2',
+      placa: 'PBC1160',
+      modelo: 'renault',
+      description: 'vendido',
+      precio: 5000,
+      color: 'rojo'
+    }
+  ]);
+
+  //hook use efect: obtener usuario informacion 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserAuth({ name: user.displayName ?? 'NA' });
-      }
-    });
+    //cambiar de null a la data del usuario 
+    setUserData(auth.currentUser);
+    setFormUser({ name: auth.currentUser?.displayName ?? '' })
+
   }, []);
 
-  // Función para cerrar sesión
-  const handleSignOut = () => {
-    signOut(auth)
-      .then(() => {
-        console.log('Sesión cerrada correctamente');
-        // Redirigir al login después de cerrar sesión
-        navigation.navigate('Loginscreen'); // Asegúrate de que 'Login' esté en tus rutas
-      })
-      .catch((error) => {
-        console.error('Error al cerrar sesión:', error);
-      });
-  };
-
+  //funcion: actualizar informacion del estado del formulario 
+  const handleSetValues = (key: string, value: string) => {
+    setFormUser({ ...FormUser, [key]: value })
+  }
+  // funcion actualizar la informacion de usuario autenticado
+  const handleUpdateUser = async () => {
+    try {
+      await updateProfile(userData!,
+        { displayName: FormUser.name });
+    } catch (e) {
+      console.log();
+    }
+    //OCULTAR MODAL
+    setShowModalProfile(false);
+  }
   return (
-    <View style={styles.rootHome}>
-      <View style={styles.headerHome}>
-        <Avatar.Text size={30} label="IM" />
+    <>
+      <View style={styles.rootHome}>
+        <View style={styles.header}>
+          <Avatar.Text size={30} label="BM" />
+          <View>
+            <Text>Bienvenido</Text>
+            <Text>{userData?.displayName}</Text>
+          </View>
+          <View style={styles.iconHeader}>
+            <IconButton
+              icon="account-edit"
+              size={30}
+              mode='contained'
+              onPress={() => setShowModalProfile(true)}
+            />
+          </View>
+        </View>
         <View>
-          <Text>Bienvenido</Text>
-          <Text>{UserAuth.name}</Text>
+          <FlatList
+            data={autos}
+            renderItem={({ item }) => < AutosCardComponet />}
+            keyExtractor={item => item.id}
+          />
         </View>
       </View>
-      
-      {/* Botón para cerrar sesión */}
-      <Button
-        mode="contained"
-        onPress={handleSignOut}
-        style={{ marginTop: 20 }}
-      >
-        Cerrar sesión
-      </Button>
-    </View>
-  );
-};
+      <Portal>
+        <Modal visible={showModalProfile} contentContainerStyle={styles.modal}>
+          <View style={styles.header}>
+            <Text variant='headlineSmall'>Mi perfil</Text>
+            <View style={styles.iconHeader}>
+              <IconButton
+                icon="close-circle-outline"
+                size={30}
+                onPress={() => setShowModalProfile(false)}
+              />
+            </View>
+          </View>
+          <Divider />
+          <TextInput
+            mode='outlined'
+            label="Nombre"
+            value={FormUser.name}
+            onChangeText={(value) => handleSetValues('name', value)}
+          />
+          <TextInput
+            mode='outlined'
+            label="Nombre"
+            disabled
+            value={userData?.email!}
+
+          />
+          <Button mode='contained' onPress={handleUpdateUser}>Actualizar</Button>
+        </Modal>
+      </Portal>
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        onPress={() => setShowModalAuto(true)}
+      />
+      <NewAutoComponent showModalAuto={showModalAuto} setShowModalAuto={setShowModalAuto} />
+    </>
+  )
+
+}

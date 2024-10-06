@@ -37,12 +37,42 @@ export const styles=StyleSheet.create({
         marginHorizontal:30,
         marginVertical:50
     },
-    headerHome:{
+    header:{
         flexDirection: 'row',
         gap: 15,
         alignItems: 'center'
 
-    }
+    },
+
+    iconHeader:{
+        alignItems:"flex-end",
+        flex: 1
+
+    },
+    modal:{
+        paddingHorizontal:20,
+        padding:20,
+        backgroundColor: '#fff',
+        borderRadius:10,
+        gap:10
+        
+    },
+
+    rootIconAuto:{
+        marginTop: 20,
+        flexDirection: 'row',
+        padding: 5,
+        alignItems: 'center',
+        gap: 20,
+    },
+
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
+      },
+
 
 })
 
