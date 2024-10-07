@@ -66,7 +66,11 @@ export const LoginScreen = () => {
                 formLogin.email,
                 formLogin.password
             );
-            console.log(response);
+
+        //navegar al home
+        navigation.dispatch(CommonActions.navigate({name: 'Home'}))
+
+
         } catch (e) {
             console.log(e);
             setShowMessage({

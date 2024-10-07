@@ -8,32 +8,26 @@ import { View } from 'react-native';
 import { ActivityIndicator, } from 'react-native-paper';
 import { styles } from '../theme/styles';
 import { HomeScreen } from '../screens/HomeScreen/HomeScreen';
+import { DetailAutoScreen } from '../screens/HomeScreen/DetailAutoScreen';
 
 //interface routes 
 
 interface Routes {
   name: string;
   screen: () => JSX.Element; //conpomente react
-
+  headerShow?: boolean; //propiedad opcional
+  options?: object; //propiedad para las opciones de pantalla
+  title: string; // Agregar título como propiedad
 }
 
 // arreglos - routes cuando el usuario no este autenticado
-
-
-const routesNoAuth: Routes[] = [
-
-  { name: 'Login', screen: LoginScreen },
-  { name: 'Register', screen: RegisterScreen }
+const routes: Routes[] = [
+  { name: 'Login', screen: LoginScreen, title: 'Iniciar Sesión' },
+  { name: 'Register', screen: RegisterScreen,title: 'Registro' },
+  { name: 'Home', screen: HomeScreen, title: 'Inicio' },
+  { name: 'Detalles', screen: DetailAutoScreen, headerShow: true, title: 'Detalles de Auto' }
 ];
 
-// arreglo - routes cuando el usuario este autenticado
-
-const routesAuth: Routes[] = [
-
-  {
-    name: 'Home', screen: HomeScreen
-
-  }];
 
 const Stack = createStackNavigator();
 
@@ -65,30 +59,22 @@ export const StackNavigator = () => {
   return (
     <>
 
-  {isLoadign? (
-    <View style={styles.rootActivity}>
-      <ActivityIndicator animating={true} size={35} />
-    </View>
-  ):(
-    <Stack.Navigator>
-      {
-        !isAuth ?
-          routesNoAuth.map((item, index) => (
-            <Stack.Screen key={index}
-              name={item.name}
-              options={{ headerShown: false }}
-              component={item.screen} />
-          ))
-          :
-          routesAuth.map((item, index) => (
-            <Stack.Screen key={index}
-              name={item.name}
-              options={{ headerShown: false }}
-              component={item.screen} />
-          ))
-      }
-    </Stack.Navigator>
-  )}
+      {isLoadign ? (
+        <View style={styles.rootActivity}>
+          <ActivityIndicator animating={true} size={35} />
+        </View>
+      ) : (
+        <Stack.Navigator initialRouteName={isAuth ? 'Home' : 'Login'}>
+          {
+            routes.map((item, index) => (
+              <Stack.Screen key={index}
+                name={item.name}
+                options={{ headerShown: item.headerShow ?? false, title: item.title}}
+                component={item.screen} />
+            ))
+          }
+        </Stack.Navigator>
+      )}
     </>
   );
 }
